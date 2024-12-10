@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# Directories
+LOG_DIR="/var/log/myapp"
+ARCHIVE_DIR="$LOG_DIR/archive"
+RETENTION_DAYS=7
+
+# Ensure the archive directory exists
+mkdir -p "$ARCHIVE_DIR"
+
+# Compress log files older than 1 day
+find "$LOG_DIR" -type f -name "*.log" -mtime +1 -exec gzip -v {} \;
+
+# Move compressed logs to the archive directory
+find "$LOG_DIR" -type f -name "*.gz" -exec mv -v {} "$ARCHIVE_DIR/" \;
+
+# Remove archived logs older than the retention period
+find "$ARCHIVE_DIR" -type f -name "*.gz" -mtime +$RETENTION_DAYS -exec rm -v {} \;
+
+echo "Log archiving and cleanup completed!"
+chmod +x log_archiver.sh
+./log_archiver.sh
+crontab -e
+0 0 * * * /path/to/log_archiver.sh >> /var/log/log_archiver.log 2>&1
+/var/log/myapp/
+├── app.log
+├── app.log.1.gz (compressed)
+└── archive/
+    ├── app.log.2.gz
+    └── app.log.3.gz
